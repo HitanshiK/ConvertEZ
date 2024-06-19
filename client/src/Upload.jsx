@@ -25,9 +25,11 @@ const Upload = () => {
           setUploadProgress(percentCompleted);
         }
       });
+      console.log('Server response:', response.data); // Log the server response
       setDownloadUrl(response.data.downloadUrl);
       setMessage('File converted successfully! Click the button to download.');
     } catch (error) {
+      console.error('Error converting file:', error); // Log the error
       setMessage('Error converting file');
     } finally {
       setUploading(false);
@@ -35,9 +37,9 @@ const Upload = () => {
   };
 
   return (
-    <div className="flex  justify-center min-h-screen">
-      <div className="flex flex-col  items-center">
-        <h2 className="mb-4 mt-8 text-3xl">Upload Word Document</h2>
+    <div className="flex justify-center items-center mt-10 ">
+      <div className="flex flex-col items-center bg-white p-8 rounded-lg shadow-lg">
+        <h2 className="mb-4 mt-8 text-3xl font-semibold">Upload Word Document!!</h2>
         <input
           type="file"
           onChange={onFileChange}
@@ -54,6 +56,7 @@ const Upload = () => {
               text={`${uploadProgress}%`}
               styles={buildStyles({
                 textSize: '16px',
+                fontWeight: 'bold',
                 pathColor: `rgba(62, 152, 199, ${uploadProgress / 100})`,
                 textColor: '#f88',
                 trailColor: '#d6d6d6',
