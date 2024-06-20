@@ -10,14 +10,15 @@ import { dirname } from 'path';
 import splitRouter from './split.routes.js';
 import compressRouter from './compress.route.js';
 import mergeRouter from './merge.route.js';
+import dotenv from 'dotenv';
+//dotenv.config()
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-const __dirname1=path.resolve();
+const __dirname1 = path.resolve();
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000; // Use environment variable for port
 
 app.use(cors());
 app.use(express.json());
@@ -39,7 +40,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Route to handle file upload and conversion
-// Route to handle file upload
 app.post('/', upload.single('file'), (req, res) => {
   try {
     const inputPath = req.file.path;
@@ -59,9 +59,8 @@ app.post('/', upload.single('file'), (req, res) => {
   }
 });
 
-
 // Route to handle file download
-app.get('/download/:filename', (req, res) => {
+app.get('/api/pdf/download/:filename', (req, res) => {
   const filePath = path.join(uploadsDir, req.params.filename);
   console.log('Download request for:', filePath);
 
@@ -88,16 +87,16 @@ app.get('/download/:filename', (req, res) => {
   });
 });
 
-
-
 // Serve the uploads directory to access the converted PDFs
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname1,'client/dist')));
+app.use(express.static(path.join(__dirname1, 'client/dist')));
 
-app.get('*',(req,res)=>{
-  res.sendFile(path.join(__dirname1,'client','dist','index.html'));
+// Fallback route to serve the React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname1, 'client/dist', 'index.html'));
 });
 
+// API routes
 app.use('/api/pdf', splitRouter);
 app.use('/api/pdf', compressRouter);
 app.use('/api/pdf', mergeRouter);
