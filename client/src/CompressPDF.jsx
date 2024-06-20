@@ -3,7 +3,7 @@ import axios from 'axios';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
-const Upload = () => {
+const CompressPDF = () => {
   const [message, setMessage] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -19,34 +19,25 @@ const Upload = () => {
     try {
       setUploading(true);
       setUploadProgress(0);
-      const response = await axios.post('http://localhost:5000/', formData, {
+      const response = await axios.post('http://localhost:5000/api/pdf/compress', formData, {
         onUploadProgress: progressEvent => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
         }
       });
       setDownloadUrl(response.data.downloadUrl);
-      setMessage('File uploaded successfully! Click the button to download.');
+      setMessage('File compressed successfully! Click the button to download.');
     } catch (error) {
-      setMessage('Error uploading file');
+      setMessage('Error compressing file');
     } finally {
       setUploading(false);
     }
   };
 
-  const downloadFile = () => {
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.setAttribute('download', 'converted.pdf');
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
-
   return (
-    <div className="flex justify-center items-center mt-10">
+    <div className="flex justify-center items-center mt-10 ">
       <div className="flex flex-col items-center bg-white p-8 rounded-lg shadow-lg">
-        <h2 className="mb-4 mt-8 text-3xl font-semibold">Upload Word Document!!</h2>
+        <h2 className="mb-4 mt-8 text-3xl font-semibold">Compress PDF Document</h2>
         <input
           type="file"
           onChange={onFileChange}
@@ -54,7 +45,7 @@ const Upload = () => {
           id="fileInput"
         />
         <label htmlFor="fileInput" className="bg-rose-500 text-2xl text-white py-4 px-8 rounded mt-4 cursor-pointer">
-          Upload and Convert
+          Upload and Compress
         </label>
         {uploading && (
           <div className="mt-4 w-24 h-24">
@@ -74,16 +65,17 @@ const Upload = () => {
         )}
         <p className="mt-4">{message}</p>
         {downloadUrl && (
-          <button
-            onClick={downloadFile}
+          <a
+            href={downloadUrl}
+            download
             className="bg-blue-500 text-white py-4 px-8 rounded mt-4 cursor-pointer"
           >
-            Download Converted PDF
-          </button>
+            Download Compressed PDF
+          </a>
         )}
       </div>
     </div>
   );
 };
 
-export default Upload;
+export default CompressPDF;

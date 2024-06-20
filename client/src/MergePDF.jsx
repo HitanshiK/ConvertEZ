@@ -25,7 +25,7 @@ const MergePDF = () => {
     try {
       setUploading(true);
       setUploadProgress(0);
-      const response = await axios.post('http://localhost:5000/merge', formData, {
+      const response = await axios.post('http://localhost:5000/api/pdf/merge', formData, {
         onUploadProgress: progressEvent => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);

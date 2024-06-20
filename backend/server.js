@@ -7,12 +7,23 @@ import { PDFDocument } from 'pdf-lib'; // Import the pdf-lib library
 import docxPdf from 'docx-pdf';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import splitRouter from './split.routes.js';
+import compressRouter from './compress.route.js';
+import mergeRouter from './merge.route.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const port = 5000;
 
 app.use(cors());
 app.use(express.json());
+
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
 
 // Middleware for handling file uploads
 const storage = multer.diskStorage({
@@ -26,7 +37,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Route to handle file upload and conversion
-app.post('/upload', upload.single('file'), (req, res) => {
+// Route to handle file upload
+app.post('/', upload.single('file'), (req, res) => {
   try {
     const inputPath = req.file.path;
     const outputPath = `uploads/${req.file.originalname.replace('.docx', '.pdf')}`;
@@ -35,7 +47,9 @@ app.post('/upload', upload.single('file'), (req, res) => {
       if (err) {
         return res.status(500).send(err);
       }
-      const downloadUrl = `http://localhost:5000/${outputPath}`;
+      
+      res.setHeader('Content-Disposition', 'attachment; filename=' + req.file.originalname.replace('.docx', '.pdf'));
+      const downloadUrl = `http://localhost:${port}/api/pdf/download/${path.basename(outputPath)}`;
       res.json({ downloadUrl });
     });
   } catch (error) {
@@ -44,38 +58,42 @@ app.post('/upload', upload.single('file'), (req, res) => {
 });
 
 
-// Route to handle merging PDFs
-app.post('/merge', upload.array('files', 10), async (req, res) => {
-  try {
-    const pdfDoc = await PDFDocument.create();
-    
-    for (const file of req.files) {
-      const fileBuffer = fs.readFileSync(file.path);
-      const donorPdfDoc = await PDFDocument.load(fileBuffer);
-      const copiedPages = await pdfDoc.copyPages(donorPdfDoc, donorPdfDoc.getPageIndices());
-      copiedPages.forEach((page) => {
-        pdfDoc.addPage(page);
-      });
-    }
-    
-    const outputPdfBytes = await pdfDoc.save();
-    const outputPath = `uploads/merged.pdf`;
-    fs.writeFileSync(outputPath, outputPdfBytes);
+// Route to handle file download
+app.get('/download/:filename', (req, res) => {
+  const filePath = path.join(uploadsDir, req.params.filename);
+  console.log('Download request for:', filePath);
 
-    const downloadUrl = `http://localhost:5000/${outputPath}`;
-    res.json({ downloadUrl });
-  } catch (error) {
-    res.status(500).send(error);
+  if (!fs.existsSync(filePath)) {
+    console.error('File does not exist:', filePath);
+    return res.status(404).send('File not found');
   }
+
+  res.setHeader('Content-Disposition', 'attachment; filename=' + req.params.filename); // Set the Content-Disposition header
+  res.download(filePath, (err) => {
+    if (err) {
+      console.error('Error downloading file:', err);
+      return res.status(500).send(err);
+    }
+    // Optional: Delay the deletion of the file
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(filePath);
+        console.log('File deleted:', filePath);
+      } catch (error) {
+        console.error('Error deleting file:', error);
+      }
+    }, 60000); // Delete after 1 minute
+  });
 });
 
 
-// Fix for __dirname in ES module scope
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Serve the uploads directory to access the converted PDFs
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.use('/api/pdf', splitRouter);
+app.use('/api/pdf', compressRouter);
+app.use('/api/pdf', mergeRouter);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

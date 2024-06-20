@@ -3,11 +3,13 @@ import axios from 'axios';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
-const Upload = () => {
+const SplitPDF = () => {
   const [message, setMessage] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [startPage, setStartPage] = useState('');
+  const [endPage, setEndPage] = useState('');
 
   const onFileChange = async (e) => {
     const file = e.target.files[0];
@@ -15,20 +17,22 @@ const Upload = () => {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('startPage', startPage);
+    formData.append('endPage', endPage);
 
     try {
       setUploading(true);
       setUploadProgress(0);
-      const response = await axios.post('http://localhost:5000/', formData, {
+      const response = await axios.post('http://localhost:5000/api/pdf/split', formData, {
         onUploadProgress: progressEvent => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
         }
       });
       setDownloadUrl(response.data.downloadUrl);
-      setMessage('File uploaded successfully! Click the button to download.');
+      setMessage('File split successfully! Click the button to download.');
     } catch (error) {
-      setMessage('Error uploading file');
+      setMessage('Error splitting file');
     } finally {
       setUploading(false);
     }
@@ -37,24 +41,40 @@ const Upload = () => {
   const downloadFile = () => {
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.setAttribute('download', 'converted.pdf');
+    link.setAttribute('download', 'split.pdf'); // Optional: Suggest a default filename
     document.body.appendChild(link);
     link.click();
     link.remove();
   };
 
   return (
-    <div className="flex justify-center items-center mt-10">
+    <div className="flex justify-center items-center mt-10 ">
       <div className="flex flex-col items-center bg-white p-8 rounded-lg shadow-lg">
-        <h2 className="mb-4 mt-8 text-3xl font-semibold">Upload Word Document!!</h2>
+        <h2 className="mb-4 mt-8 text-3xl font-semibold">Split PDF Document</h2>
         <input
           type="file"
           onChange={onFileChange}
           className="hidden"
           id="fileInput"
         />
+        <div className="flex mb-4">
+          <input
+            type="number"
+            value={startPage}
+            onChange={(e) => setStartPage(e.target.value)}
+            placeholder="Start Page"
+            className="mr-2 p-2 border rounded"
+          />
+          <input
+            type="number"
+            value={endPage}
+            onChange={(e) => setEndPage(e.target.value)}
+            placeholder="End Page"
+            className="p-2 border rounded"
+          />
+        </div>
         <label htmlFor="fileInput" className="bg-rose-500 text-2xl text-white py-4 px-8 rounded mt-4 cursor-pointer">
-          Upload and Convert
+          Upload and Split
         </label>
         {uploading && (
           <div className="mt-4 w-24 h-24">
@@ -78,7 +98,7 @@ const Upload = () => {
             onClick={downloadFile}
             className="bg-blue-500 text-white py-4 px-8 rounded mt-4 cursor-pointer"
           >
-            Download Converted PDF
+            Download Split PDF
           </button>
         )}
       </div>
@@ -86,4 +106,4 @@ const Upload = () => {
   );
 };
 
-export default Upload;
+export default SplitPDF;
