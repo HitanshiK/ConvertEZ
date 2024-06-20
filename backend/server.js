@@ -15,7 +15,7 @@ import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const __dirname1 = path.resolve();
+//const __dirname1 = path.resolve();
 
 const app = express();
 const port = process.env.PORT || 5000; // Use environment variable for port
@@ -89,12 +89,12 @@ app.get('/api/pdf/download/:filename', (req, res) => {
 
 // Serve the uploads directory to access the converted PDFs
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname1, 'client/dist')));
+//app.use(express.static(path.join(__dirname1, 'client/dist')));
 
 // Fallback route to serve the React app
-app.get('*', (req, res) => {
+/*app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname1, 'client/dist', 'index.html'));
-});
+});*/
 
 // API routes
 app.use('/api/pdf', splitRouter);
