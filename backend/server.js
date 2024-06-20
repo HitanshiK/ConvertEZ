@@ -92,7 +92,7 @@ app.get('/download/:filename', (req, res) => {
 
 // Serve the uploads directory to access the converted PDFs
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname1,'/client/dist')));
+app.use(express.static(path.join(__dirname1,'client/dist')));
 
 app.get('*',(req,res)=>{
   res.sendFile(path.join(__dirname1,'client','dist','index.html'));
