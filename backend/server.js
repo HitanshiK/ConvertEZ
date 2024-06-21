@@ -20,7 +20,7 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 5000; // Use environment variable for port
 
-app.use(cors());
+app.use(cors({origin:'https://convertez1.onrender.com/'}));
 app.use(express.json());
 
 const uploadsDir = path.join(__dirname, 'uploads');
