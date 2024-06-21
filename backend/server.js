@@ -20,7 +20,19 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 5000; // Use environment variable for port
 
-app.use(cors({origin:'https://convertez1.onrender.com/'}));
+const allowedOrigins = ['https://convertez1.onrender.com', 'http://localhost:5173']; // Add all allowed origins
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const uploadsDir = path.join(__dirname, 'uploads');
