@@ -92,11 +92,11 @@ app.get('/api/pdf/download/:filename', (req, res) => {
 
 // Serve the uploads directory to access the converted PDFs
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname1, '../client/dist')));
 
 // Fallback route to serve the React app
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(__dirname1, '../client/dist/index.html'));
 });
 
 // API routes
