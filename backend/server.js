@@ -20,7 +20,7 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 5000; // Use environment variable for port
 
-const allowedOrigins = ['http://localhost:5173']; // Add all allowed origins
+const allowedOrigins = ['https://convertez.onrender.com','http://localhost:5173']; // Add all allowed origins
 
 const corsOptions = {
   origin: (origin, callback) => {
