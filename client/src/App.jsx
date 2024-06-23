@@ -8,27 +8,7 @@ import CompressPDF from './CompressPDF';
 import Footer from './Footer';
 
 const App = () => {
- /* useEffect(() => {
-    const apiBaseUrl = window.location.hostname === 'localhost'
-    ? 'http://localhost:5000'
-    : 'https://convertez1.onrender.com';
-
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`${apiBaseUrl}/`);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        console.log(data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);*/
-
+ 
   return (
     <Router>
       <Header />
