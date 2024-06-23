@@ -21,10 +21,7 @@ const __dirname1 = path.resolve();
 const app = express();
 const port =  5000; // Use environment variable for port
 
-app.use(cors({
-  origin: ['http://localhost:5173']
-}));
-app.use(express.json());
+app.use();
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
