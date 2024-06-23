@@ -19,7 +19,7 @@ const __dirname = dirname(__filename);
 const __dirname1 = path.resolve();
 
 const app = express();
-const port = 5000; // Use environment variable for port
+const port =  5000; // Use environment variable for port
 
 app.use(cors());
 app.use(express.json());
