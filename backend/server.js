@@ -12,7 +12,7 @@ import compressRouter from './compress.route.js';
 import mergeRouter from './merge.route.js';
 import dotenv from 'dotenv';
 
-dotenv.config(); // Load environment variables
+//dotenv.config(); // Load environment variables
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
