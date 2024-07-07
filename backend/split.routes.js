@@ -7,20 +7,19 @@ import fs from 'fs';
 
 const router = express.Router();
 
-const uploadsDir = path.join(path.resolve(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
+//const uploadsDir = path.join(path.resolve(), 'uploads');
+/*if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
-}
+}*/
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadsDir);
+    cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
+    cb(null, file.originalname);
   },
 });
-
 const upload = multer({ storage: storage });
 
 router.post('/split', upload.single('file'), splitPDF);

@@ -23,7 +23,13 @@ const SplitPDF = () => {
     try {
       setUploading(true);
       setUploadProgress(0);
-      const response = await axios.post('http://localhost:5000/api/pdf/split', formData, {
+      const localUrl = 'http://localhost:5000';
+      const productionUrl = 'https://convertez.onrender.com';
+
+      // Select URL based on environment
+      const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
+
+      const response = await axios.post(`${apiUrl}/api/pdf/split`, formData, {
         onUploadProgress: progressEvent => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
@@ -33,22 +39,35 @@ const SplitPDF = () => {
       setMessage('File split successfully! Click the button to download.');
     } catch (error) {
       setMessage('Error splitting file');
+      console.error('Splitting error:', error);
     } finally {
       setUploading(false);
     }
   };
 
-  const downloadFile = () => {
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.setAttribute('download', 'split.pdf'); // Optional: Suggest a default filename
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+  const downloadFile = async () => {
+    try {
+      const response = await axios.get(downloadUrl, {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'split.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setMessage('File downloaded successfully');
+    } catch (error) {
+      setMessage('Error downloading file');
+      console.error('Download error:', error);
+    }
   };
 
   return (
-    <div className="flex justify-center items-center mt-10 ">
+    <div className="flex justify-center items-center mt-10">
       <div className="flex flex-col items-center bg-white p-8 rounded-lg shadow-lg">
         <h2 className="mb-4 mt-8 text-3xl font-semibold">Split PDF Document</h2>
         <input

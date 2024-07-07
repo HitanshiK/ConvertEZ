@@ -19,7 +19,13 @@ const CompressPDF = () => {
     try {
       setUploading(true);
       setUploadProgress(0);
-      const response = await axios.post('http://localhost:5000/api/pdf/compress', formData, {
+      const localUrl = 'http://localhost:5000';
+      const productionUrl = 'https://convertez.onrender.com';
+
+      // Select URL based on environment
+      const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
+
+      const response = await axios.post(`${apiUrl}/api/pdf/compress`, formData, {
         onUploadProgress: progressEvent => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);

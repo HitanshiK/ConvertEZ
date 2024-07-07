@@ -6,6 +6,8 @@ import MergePDF from './MergePDF';
 import SplitPDF from './SplitPDF';
 import CompressPDF from './CompressPDF';
 import Footer from './Footer';
+import dotenv from 'dotenv';
+//dotenv.config();
 
 const App = () => {
  

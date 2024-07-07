@@ -32,39 +32,37 @@ export const splitPDF = async (req, res) => {
         const splitPdfBytes = await splitDoc.save();
         fs.writeFileSync(outputFilePath, splitPdfBytes);
     
-        res.json({ downloadUrl: `http://localhost:${process.env.PORT || 5000}/download/${path.basename(outputFilePath)}` });
+        res.json({ downloadUrl: `http://localhost:${process.env.PORT || 5000}/api/pdf/download/${path.basename(outputFilePath)}` });
       } catch (error) {
-        console.error(error);
+        console.error('Error splitting PDF:', error);
         res.status(500).json({ message: 'Error splitting PDF' });
       }      
 };
 export const downloadFile = (req, res) => {
-    const filePath = path.join(uploadsDir, req.params.filename);
-    console.log('Download request for:', filePath);
-  
-    if (!fs.existsSync(filePath)) {
-      console.error('File does not exist:', filePath);
-      return res.status(404).send('File not found');
+  const filePath = path.join(uploadsDir, req.params.filename);
+
+  if (!fs.existsSync(filePath)) {
+    console.error('File does not exist:', filePath);
+    return res.status(404).send('File not found');
+  }
+
+  res.download(filePath, (err) => {
+    if (err) {
+      console.error('Error downloading file:', err);
+      return res.status(500).send('Error downloading file');
     }
-  
-    res.setHeader('Content-Disposition', `attachment; filename=${req.params.filename}`);
-    res.setHeader('Content-Type', 'application/octet-stream');
-  
-    res.download(filePath, (err) => {
-      if (err) {
-        console.error('Error downloading file:', err);
-        return res.status(500).send(err);
+    // Optional: Delay the deletion of the file
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(filePath);
+        console.log('File deleted:', filePath);
+      } catch (error) {
+        console.error('Error deleting file:', error);
       }
-      setTimeout(() => {
-        try {
-          fs.unlinkSync(filePath);
-          console.log('File deleted:', filePath);
-        } catch (error) {
-          console.error('Error deleting file:', error);
-        }
-      }, 60000);
-    });
-  };
+    }, 60000); // Delete after 1 minute
+  });
+};
+
   
   
   
