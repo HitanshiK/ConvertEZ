@@ -43,20 +43,29 @@ const upload = multer({ storage: storage });
 // Route to handle file upload and conversion
 app.post('/', upload.single('file'), (req, res) => {
   try {
+    if (!req.file) {
+      console.error('No file uploaded');
+      return res.status(400).send('No file uploaded');
+    }
+
     const inputPath = req.file.path;
-    const outputPath = `uploads/${req.file.originalname.replace('.docx', '.pdf')}`;
+    const outputPath = path.join(uploadsDir, req.file.originalname.replace('.docx', '.pdf'));
+
+    console.log(`Converting file: ${inputPath} to ${outputPath}`);
 
     docxPdf(inputPath, outputPath, (err) => {
       if (err) {
-        return res.status(500).send(err);
+        console.error('Conversion error:', err);
+        return res.status(500).send('Error during file conversion');
       }
 
-      res.setHeader('Content-Disposition', 'attachment; filename=' + req.file.originalname.replace('.docx', '.pdf'));
       const downloadUrl = `${req.protocol}://${req.get('host')}/api/pdf/download/${path.basename(outputPath)}`;
+      console.log(`Conversion successful, download URL: ${downloadUrl}`);
       res.json({ downloadUrl });
     });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Upload and conversion error:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
@@ -70,13 +79,13 @@ app.get('/api/pdf/download/:filename', (req, res) => {
     return res.status(404).send('File not found');
   }
 
-  res.setHeader('Content-Disposition', 'attachment; filename=' + req.params.filename); // Set the Content-Disposition header
+  res.setHeader('Content-Disposition', 'attachment; filename=' + req.params.filename);
   res.download(filePath, (err) => {
     if (err) {
       console.error('Error downloading file:', err);
-      return res.status(500).send(err);
+      return res.status(500).send('Error during file download');
     }
-    // Optional: Delay the deletion of the file
+
     setTimeout(() => {
       try {
         fs.unlinkSync(filePath);
