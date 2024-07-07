@@ -4,6 +4,9 @@ import path from 'path';
 import fs from 'fs';
 
 const uploadsDir = path.join(path.resolve(), 'uploads');
+const localUrl = 'http://localhost:5000';
+const productionUrl = 'https://convertez.onrender.com';
+const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
 
 export const splitPDF = async (req, res) => {
     try {
@@ -32,7 +35,7 @@ export const splitPDF = async (req, res) => {
         const splitPdfBytes = await splitDoc.save();
         fs.writeFileSync(outputFilePath, splitPdfBytes);
     
-        res.json({ downloadUrl: `http://localhost:${process.env.PORT || 5000}/api/pdf/download/${path.basename(outputFilePath)}` });
+        res.json({ downloadUrl: `${apiUrl}/api/pdf/download/${path.basename(outputFilePath)}` });
       } catch (error) {
         console.error('Error splitting PDF:', error);
         res.status(500).json({ message: 'Error splitting PDF' });

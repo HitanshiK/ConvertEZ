@@ -3,6 +3,9 @@ import path from 'path';
 import fs from 'fs';
 
 const uploadsDir = path.join(path.resolve(), 'uploads');
+const localUrl = 'http://localhost:5000';
+const productionUrl = 'https://convertez.onrender.com';
+const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
 
 export const mergePDFs = async (req, res) => {
   try {
@@ -21,7 +24,7 @@ export const mergePDFs = async (req, res) => {
     const outputPath = path.join(uploadsDir, `merged-${Date.now()}.pdf`);
     fs.writeFileSync(outputPath, outputPdfBytes);
 
-    const downloadUrl = `http://localhost:${process.env.PORT || 5000}/api/pdf/download/${path.basename(outputPath)}`;
+    const downloadUrl = `${apiUrl}/api/pdf/download/${path.basename(outputPath)}`;
     res.json({ downloadUrl });
   } catch (error) {
     console.error('Error merging PDFs:', error);
