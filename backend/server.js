@@ -40,6 +40,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// Define the base URLs
+const localUrl = 'http://localhost:5000';
+const productionUrl = 'https://convertez.onrender.com';
+const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
+
 // Route to handle file upload and conversion
 app.post('/', upload.single('file'), (req, res) => {
   try {
@@ -59,7 +64,7 @@ app.post('/', upload.single('file'), (req, res) => {
         return res.status(500).send('Error during file conversion');
       }
 
-      const downloadUrl = `${req.protocol}://${req.get('host')}/api/pdf/download/${path.basename(outputPath)}`;
+      const downloadUrl = `${apiUrl}/api/pdf/download/${path.basename(outputPath)}`;
       console.log(`Conversion successful, download URL: ${downloadUrl}`);
       res.json({ downloadUrl });
     });
@@ -79,13 +84,13 @@ app.get('/api/pdf/download/:filename', (req, res) => {
     return res.status(404).send('File not found');
   }
 
-  res.setHeader('Content-Disposition', 'attachment; filename=' + req.params.filename);
+  res.setHeader('Content-Disposition', 'attachment; filename=' + req.params.filename); // Set the Content-Disposition header
   res.download(filePath, (err) => {
     if (err) {
       console.error('Error downloading file:', err);
-      return res.status(500).send('Error during file download');
+      return res.status(500).send(err);
     }
-
+    // Optional: Delay the deletion of the file
     setTimeout(() => {
       try {
         fs.unlinkSync(filePath);
