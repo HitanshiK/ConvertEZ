@@ -3,13 +3,13 @@ import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import pdf from 'html-pdf';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import splitRouter from './split.routes.js';
 import compressRouter from './compress.route.js';
 import mergeRouter from './merge.route.js';
 import dotenv from 'dotenv';
+import { chromium } from 'playwright';
 
 // Load environment variables
 dotenv.config();
@@ -39,12 +39,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-const localUrl = 'http://localhost:5000';
-const productionUrl = 'https://convertez.onrender.com';
-const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
-
-// Route to handle file upload and conversion
-app.post('/', upload.single('file'), (req, res) => {
+// Route to handle file upload and conversion using Playwright
+app.post('/', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       console.error('No file uploaded');
@@ -56,23 +52,29 @@ app.post('/', upload.single('file'), (req, res) => {
 
     console.log(`Converting file: ${inputPath} to ${outputPath}`);
 
-    const options = { format: 'A4' };
+    const browser = await chromium.launch();
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
     const html = fs.readFileSync(inputPath, 'utf8');
 
-    pdf.create(html, options).toFile(outputPath, (err, pdfRes) => {
-      if (err) {
-        console.error('Conversion error:', err.message);
-        console.error(err.stack); // Log the stack trace
-        return res.status(500).send('Error during file conversion');
-      }
+    // Load HTML content into the page
+    await page.setContent(html);
 
-      const downloadUrl = `${apiUrl}/api/pdf/download/${path.basename(outputPath)}`;
-      console.log(`Conversion successful, download URL: ${downloadUrl}`);
-      res.json({ downloadUrl });
+    // Generate PDF from the page content
+    await page.pdf({
+      path: outputPath,
+      format: 'A4',
     });
+
+    await browser.close();
+
+    const downloadUrl = `${req.protocol}://${req.get('host')}/api/pdf/download/${path.basename(outputPath)}`;
+    console.log(`Conversion successful, download URL: ${downloadUrl}`);
+    res.json({ downloadUrl });
   } catch (error) {
     console.error('Upload and conversion error:', error.message);
-    console.error(error.stack); // Log the stack trace
+    console.error(error.stack);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -91,7 +93,7 @@ app.get('/api/pdf/download/:filename', (req, res) => {
   res.download(filePath, (err) => {
     if (err) {
       console.error('Error downloading file:', err.message);
-      console.error(err.stack); // Log the stack trace
+      console.error(err.stack);
       return res.status(500).send(err);
     }
     // Optional: Delay the deletion of the file
@@ -101,7 +103,7 @@ app.get('/api/pdf/download/:filename', (req, res) => {
         console.log('File deleted:', filePath);
       } catch (error) {
         console.error('Error deleting file:', error.message);
-        console.error(error.stack); // Log the stack trace
+        console.error(error.stack);
       }
     }, 60000); // Delete after 1 minute
   });
