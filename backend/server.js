@@ -10,6 +10,7 @@ import { dirname } from 'path';
 import splitRouter from './split.routes.js';
 import compressRouter from './compress.route.js';
 import mergeRouter from './merge.route.js';
+import pdf from 'html-pdf';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -58,7 +59,10 @@ app.post('/', upload.single('file'), (req, res) => {
 
     console.log(`Converting file: ${inputPath} to ${outputPath}`);
 
-    docxPdf(inputPath, outputPath, (err) => {
+    const options = { format: 'A4' };
+    const html = fs.readFileSync(inputPath, 'utf8');
+
+    pdf.create(html, options).toFile(outputPath, (err, pdfRes) => {
       if (err) {
         console.error('Conversion error:', err);
         return res.status(500).send('Error during file conversion');
