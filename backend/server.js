@@ -3,14 +3,12 @@ import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { PDFDocument } from 'pdf-lib'; // Import the pdf-lib library
-import docxPdf from 'docx-pdf';
+import pdf from 'html-pdf';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import splitRouter from './split.routes.js';
 import compressRouter from './compress.route.js';
 import mergeRouter from './merge.route.js';
-import pdf from 'html-pdf';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -41,7 +39,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Define the base URLs
 const localUrl = 'http://localhost:5000';
 const productionUrl = 'https://convertez.onrender.com';
 const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
@@ -64,7 +61,8 @@ app.post('/', upload.single('file'), (req, res) => {
 
     pdf.create(html, options).toFile(outputPath, (err, pdfRes) => {
       if (err) {
-        console.error('Conversion error:', err);
+        console.error('Conversion error:', err.message);
+        console.error(err.stack); // Log the stack trace
         return res.status(500).send('Error during file conversion');
       }
 
@@ -73,7 +71,8 @@ app.post('/', upload.single('file'), (req, res) => {
       res.json({ downloadUrl });
     });
   } catch (error) {
-    console.error('Upload and conversion error:', error);
+    console.error('Upload and conversion error:', error.message);
+    console.error(error.stack); // Log the stack trace
     res.status(500).send('Internal Server Error');
   }
 });
@@ -91,7 +90,8 @@ app.get('/api/pdf/download/:filename', (req, res) => {
   res.setHeader('Content-Disposition', 'attachment; filename=' + req.params.filename); // Set the Content-Disposition header
   res.download(filePath, (err) => {
     if (err) {
-      console.error('Error downloading file:', err);
+      console.error('Error downloading file:', err.message);
+      console.error(err.stack); // Log the stack trace
       return res.status(500).send(err);
     }
     // Optional: Delay the deletion of the file
@@ -100,7 +100,8 @@ app.get('/api/pdf/download/:filename', (req, res) => {
         fs.unlinkSync(filePath);
         console.log('File deleted:', filePath);
       } catch (error) {
-        console.error('Error deleting file:', error);
+        console.error('Error deleting file:', error.message);
+        console.error(error.stack); // Log the stack trace
       }
     }, 60000); // Delete after 1 minute
   });
