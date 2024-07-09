@@ -56,20 +56,27 @@ app.post('/', upload.single('file'), async (req, res) => {
 
     console.log(`Converting file: ${inputPath} to ${outputPath}`);
 
-    const browser = await chromium.launch();
+    const browser = await chromium.launch({ timeout: 60000 }); // Increase timeout
     const context = await browser.newContext();
     const page = await context.newPage();
 
     const html = fs.readFileSync(inputPath, 'utf8');
 
+    console.log('Loaded HTML content.');
+
     // Load HTML content into the page
-    await page.setContent(html);
+    await page.setContent(html, { waitUntil: 'load', timeout: 60000 }); // Increase timeout
+
+    console.log('HTML content set in the page.');
 
     // Generate PDF from the page content
     await page.pdf({
       path: outputPath,
       format: 'A4',
+      timeout: 60000, // Increase timeout
     });
+
+    console.log('PDF created successfully.');
 
     await browser.close();
 
