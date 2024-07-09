@@ -39,6 +39,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+const localUrl = 'http://localhost:5000';
+const productionUrl = 'https://convertez.onrender.com';
+const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
+
 // Route to handle file upload and conversion using Playwright
 app.post('/', upload.single('file'), async (req, res) => {
   try {
@@ -69,7 +73,7 @@ app.post('/', upload.single('file'), async (req, res) => {
 
     await browser.close();
 
-    const downloadUrl = `${req.protocol}://${req.get('host')}/api/pdf/download/${path.basename(outputPath)}`;
+    const downloadUrl = `${apiUrl}/api/pdf/download/${path.basename(outputPath)}`;
     console.log(`Conversion successful, download URL: ${downloadUrl}`);
     res.json({ downloadUrl });
   } catch (error) {
