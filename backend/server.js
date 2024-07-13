@@ -5,11 +5,11 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { chromium } from 'playwright';
 import splitRouter from './split.routes.js';
 import compressRouter from './compress.route.js';
 import mergeRouter from './merge.route.js';
 import dotenv from 'dotenv';
-import { chromium } from 'playwright';
 
 // Load environment variables
 dotenv.config();
@@ -43,7 +43,7 @@ const localUrl = 'http://localhost:5000';
 const productionUrl = 'https://convertez.onrender.com';
 const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
 
-// Route to handle file upload and conversion using Playwright
+// Route to handle file upload and conversion
 app.post('/', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -56,27 +56,13 @@ app.post('/', upload.single('file'), async (req, res) => {
 
     console.log(`Converting file: ${inputPath} to ${outputPath}`);
 
-    const browser = await chromium.launch({ timeout: 60000 }); // Increase timeout
-    const context = await browser.newContext();
-    const page = await context.newPage();
+    const htmlContent = fs.readFileSync(inputPath, 'utf8');
 
-    const html = fs.readFileSync(inputPath, 'utf8');
+    const browser = await chromium.launch();
+    const page = await browser.newPage();
 
-    console.log('Loaded HTML content.');
-
-    // Load HTML content into the page
-    await page.setContent(html, { waitUntil: 'load', timeout: 60000 }); // Increase timeout
-
-    console.log('HTML content set in the page.');
-
-    // Generate PDF from the page content
-    await page.pdf({
-      path: outputPath,
-      format: 'A4',
-      timeout: 60000, // Increase timeout
-    });
-
-    console.log('PDF created successfully.');
+    await page.setContent(htmlContent);
+    await page.pdf({ path: outputPath, format: 'A4' });
 
     await browser.close();
 
@@ -85,7 +71,7 @@ app.post('/', upload.single('file'), async (req, res) => {
     res.json({ downloadUrl });
   } catch (error) {
     console.error('Upload and conversion error:', error.message);
-    console.error(error.stack);
+    console.error(error.stack); // Log the stack trace
     res.status(500).send('Internal Server Error');
   }
 });
@@ -104,7 +90,7 @@ app.get('/api/pdf/download/:filename', (req, res) => {
   res.download(filePath, (err) => {
     if (err) {
       console.error('Error downloading file:', err.message);
-      console.error(err.stack);
+      console.error(err.stack); // Log the stack trace
       return res.status(500).send(err);
     }
     // Optional: Delay the deletion of the file
@@ -114,7 +100,7 @@ app.get('/api/pdf/download/:filename', (req, res) => {
         console.log('File deleted:', filePath);
       } catch (error) {
         console.error('Error deleting file:', error.message);
-        console.error(error.stack);
+        console.error(error.stack); // Log the stack trace
       }
     }, 60000); // Delete after 1 minute
   });
