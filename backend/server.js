@@ -5,11 +5,11 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { chromium } from 'playwright';
 import splitRouter from './split.routes.js';
 import compressRouter from './compress.route.js';
 import mergeRouter from './merge.route.js';
 import dotenv from 'dotenv';
+import { chromium } from 'playwright'; // Import Playwright
 
 // Load environment variables
 dotenv.config();
@@ -43,9 +43,22 @@ const localUrl = 'http://localhost:5000';
 const productionUrl = 'https://convertez.onrender.com';
 const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
 
+// Install Playwright browsers if not installed
+async function ensurePlaywrightBrowsersInstalled() {
+  try {
+    await chromium.launch(); // This will trigger the browser installation if not already installed
+  } catch (error) {
+    console.error('Error launching Playwright:', error.message);
+    console.error(error.stack);
+    throw error;
+  }
+}
+
 // Route to handle file upload and conversion
 app.post('/', upload.single('file'), async (req, res) => {
   try {
+    await ensurePlaywrightBrowsersInstalled(); // Ensure Playwright browsers are installed
+
     if (!req.file) {
       console.error('No file uploaded');
       return res.status(400).send('No file uploaded');
@@ -56,11 +69,11 @@ app.post('/', upload.single('file'), async (req, res) => {
 
     console.log(`Converting file: ${inputPath} to ${outputPath}`);
 
-    const htmlContent = fs.readFileSync(inputPath, 'utf8');
-
     const browser = await chromium.launch();
-    const page = await browser.newPage();
+    const context = await browser.newContext();
+    const page = await context.newPage();
 
+    const htmlContent = fs.readFileSync(inputPath, 'utf8');
     await page.setContent(htmlContent);
     await page.pdf({ path: outputPath, format: 'A4' });
 
