@@ -42,6 +42,8 @@ const upload = multer({ storage: storage });
 const localUrl = 'http://localhost:5000';
 const productionUrl = 'https://convertez.onrender.com';
 const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
+process.env.PLAYWRIGHT_BROWSERS_PATH = './pw-browsers';
+
 
 // Install Playwright browsers if not installed
 async function ensurePlaywrightBrowsersInstalled() {
