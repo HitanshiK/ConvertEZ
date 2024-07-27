@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "build": "npm install && npm install --prefix client && npm run build --prefix client",
+    "build": "npm install && npm install --prefix client && npm run build --prefix client && npm run install-playwright-browsers",
     "install-playwright-browsers": "PLAYWRIGHT_BROWSERS_PATH=$HOME/pw-browsers npx playwright install --with-deps"
   },
   "keywords": [],
