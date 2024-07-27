@@ -7,14 +7,14 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "build": "npm install && npm install --prefix client && npm run build --prefix client && PLAYWRIGHT_BROWSERS_PATH=./.cache/ms-playwright npx playwright install"
+    "build": "npm install && npm install --prefix client && npm run build --prefix client",
+    "install-playwright-browsers": "PLAYWRIGHT_BROWSERS_PATH=$HOME/pw-browsers npx playwright install --with-deps"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "docx-pdf": "^0.0.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "fs-extra": "^11.2.0",
