@@ -69,8 +69,11 @@ app.post('/', upload.single('file'), async (req, res) => {
 
     console.log(`Converting file: ${inputPath} to ${outputPath}`);
 
-    const browser = await chromium.launch();
-    const context = await browser.newContext();
+    const browser = await chromium.launch({
+      headless: true, // Run browser in headless mode
+      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for certain environments
+    });
+        const context = await browser.newContext();
     const page = await context.newPage();
 
     const htmlContent = fs.readFileSync(inputPath, 'utf8');
