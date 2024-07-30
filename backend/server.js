@@ -9,7 +9,7 @@ import splitRouter from './split.routes.js';
 import compressRouter from './compress.route.js';
 import mergeRouter from './merge.route.js';
 import dotenv from 'dotenv';
-import { chromium } from 'playwright'; // Import Playwright
+import puppeteer from 'puppeteer'; // Import Puppeteer
 
 // Load environment variables
 dotenv.config();
@@ -42,16 +42,34 @@ const upload = multer({ storage: storage });
 const localUrl = 'http://localhost:5000';
 const productionUrl = 'https://convertez.onrender.com';
 const apiUrl = process.env.NODE_ENV === 'production' ? productionUrl : localUrl;
-process.env.PLAYWRIGHT_BROWSERS_PATH = './pw-browsers';
 
-
-// Install Playwright browsers if not installed
-async function ensurePlaywrightBrowsersInstalled() {
+// Function to convert HTML to PDF using Puppeteer
+async function convertToPdf(inputPath, outputPath) {
+  console.log(`Converting file: ${inputPath} to ${outputPath}`);
+  
   try {
-    await chromium.launch(); // This will trigger the browser installation if not already installed
+    // Launch Puppeteer
+    const browser = await puppeteer.launch({
+      headless: true, // Run in headless mode
+      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for certain environments
+    });
+    
+    const page = await browser.newPage();
+    
+    // Read the HTML content from the uploaded file
+    const htmlContent = fs.readFileSync(inputPath, 'utf8');
+    
+    // Set the page content to the HTML content
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    
+    // Generate a PDF from the page content
+    await page.pdf({ path: outputPath, format: 'A4' });
+    
+    await browser.close();
+    
+    console.log('PDF conversion completed successfully.');
   } catch (error) {
-    console.error('Error launching Playwright:', error.message);
-    console.error(error.stack);
+    console.error('Error converting to PDF:', error.message);
     throw error;
   }
 }
@@ -59,8 +77,6 @@ async function ensurePlaywrightBrowsersInstalled() {
 // Route to handle file upload and conversion
 app.post('/', upload.single('file'), async (req, res) => {
   try {
-    await ensurePlaywrightBrowsersInstalled(); // Ensure Playwright browsers are installed
-
     if (!req.file) {
       console.error('No file uploaded');
       return res.status(400).send('No file uploaded');
@@ -69,20 +85,7 @@ app.post('/', upload.single('file'), async (req, res) => {
     const inputPath = req.file.path;
     const outputPath = path.join(uploadsDir, req.file.originalname.replace('.docx', '.pdf'));
 
-    console.log(`Converting file: ${inputPath} to ${outputPath}`);
-
-    const browser = await chromium.launch({
-      headless: true, // Run browser in headless mode
-      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for certain environments
-    });
-        const context = await browser.newContext();
-    const page = await context.newPage();
-
-    const htmlContent = fs.readFileSync(inputPath, 'utf8');
-    await page.setContent(htmlContent);
-    await page.pdf({ path: outputPath, format: 'A4' });
-
-    await browser.close();
+    await convertToPdf(inputPath, outputPath);
 
     const downloadUrl = `${apiUrl}/api/pdf/download/${path.basename(outputPath)}`;
     console.log(`Conversion successful, download URL: ${downloadUrl}`);
